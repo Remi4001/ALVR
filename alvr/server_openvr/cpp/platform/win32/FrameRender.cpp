@@ -636,7 +636,7 @@ bool FrameRender::RenderFrame(
         D3D11_TEXTURE2D_DESC srcDesc;
         textures[0]->GetDesc(&srcDesc);
 
-        D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+        D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = { };
         SRVDesc.Format = srcDesc.Format;
         SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
         SRVDesc.Texture2D.MostDetailedMip = 0;

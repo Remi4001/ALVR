@@ -34,14 +34,14 @@ void FormatConverter::init(
     m_semaphore = semaphore;
 
     // Timestamp query
-    VkQueryPoolCreateInfo queryPoolInfo = {};
+    VkQueryPoolCreateInfo queryPoolInfo = { };
     queryPoolInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
     queryPoolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
     queryPoolInfo.queryCount = 1;
     VK_CHECK(vkCreateQueryPool(r->m_dev, &queryPoolInfo, nullptr, &m_queryPool));
 
     // Command buffer
-    VkCommandBufferAllocateInfo commandBufferInfo = {};
+    VkCommandBufferAllocateInfo commandBufferInfo = { };
     commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     commandBufferInfo.commandPool = r->m_commandPool;
@@ -50,18 +50,18 @@ void FormatConverter::init(
 
     // Descriptors
     VkDescriptorSetLayoutBinding descriptorBindings[2];
-    descriptorBindings[0] = {};
+    descriptorBindings[0] = { };
     descriptorBindings[0].binding = 0;
     descriptorBindings[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     descriptorBindings[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     descriptorBindings[0].descriptorCount = 1;
-    descriptorBindings[1] = {};
+    descriptorBindings[1] = { };
     descriptorBindings[1].binding = 1;
     descriptorBindings[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     descriptorBindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
     descriptorBindings[1].descriptorCount = count;
 
-    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
+    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = { };
     descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     descriptorSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
     descriptorSetLayoutInfo.bindingCount = 2;
@@ -71,12 +71,12 @@ void FormatConverter::init(
     ));
 
     // Input image
-    VkImageViewCreateInfo viewInfo = {};
+    VkImageViewCreateInfo viewInfo = { };
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
     viewInfo.format = imageCreateInfo.format;
     viewInfo.image = image;
-    viewInfo.subresourceRange = {};
+    viewInfo.subresourceRange = { };
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     viewInfo.subresourceRange.baseMipLevel = 0;
     viewInfo.subresourceRange.levelCount = 1;
@@ -90,7 +90,7 @@ void FormatConverter::init(
 
     // Output images
     for (int i = 0; i < count; ++i) {
-        VkImageCreateInfo imageInfo = {};
+        VkImageCreateInfo imageInfo = { };
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
         imageInfo.format = VK_FORMAT_R8_UNORM;
@@ -106,7 +106,7 @@ void FormatConverter::init(
         VK_CHECK(vkCreateImage(r->m_dev, &imageInfo, nullptr, &m_images[i].image));
 
         VkMemoryRequirements memReqs;
-        VkMemoryAllocateInfo memAllocInfo {};
+        VkMemoryAllocateInfo memAllocInfo { };
         memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         vkGetImageMemoryRequirements(r->m_dev, m_images[i].image, &memReqs);
         memAllocInfo.allocationSize = memReqs.size;
@@ -117,12 +117,12 @@ void FormatConverter::init(
         VK_CHECK(vkAllocateMemory(r->m_dev, &memAllocInfo, nullptr, &m_images[i].memory));
         VK_CHECK(vkBindImageMemory(r->m_dev, m_images[i].image, m_images[i].memory, 0));
 
-        VkImageViewCreateInfo viewInfo = {};
+        VkImageViewCreateInfo viewInfo = { };
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
         viewInfo.format = imageInfo.format;
         viewInfo.image = m_images[i].image;
-        viewInfo.subresourceRange = {};
+        viewInfo.subresourceRange = { };
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         viewInfo.subresourceRange.baseMipLevel = 0;
         viewInfo.subresourceRange.levelCount = 1;
@@ -134,7 +134,7 @@ void FormatConverter::init(
         viewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
         VK_CHECK(vkCreateImageView(r->m_dev, &viewInfo, nullptr, &m_images[i].view));
 
-        VkImageMemoryBarrier imageBarrier = {};
+        VkImageMemoryBarrier imageBarrier = { };
         imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         imageBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         imageBarrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -160,7 +160,7 @@ void FormatConverter::init(
         );
         r->commandBufferSubmit();
 
-        VkImageSubresource subresource = {};
+        VkImageSubresource subresource = { };
         subresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         VkSubresourceLayout layout;
         vkGetImageSubresourceLayout(r->m_dev, m_images[i].image, &subresource, &layout);
@@ -176,31 +176,31 @@ void FormatConverter::init(
         ));
     }
 
-    VkSemaphoreCreateInfo semInfo = {};
+    VkSemaphoreCreateInfo semInfo = { };
     semInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     VK_CHECK(vkCreateSemaphore(r->m_dev, &semInfo, nullptr, &m_output.semaphore));
 
     // Shader
-    VkShaderModuleCreateInfo moduleInfo = {};
+    VkShaderModuleCreateInfo moduleInfo = { };
     moduleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     moduleInfo.codeSize = shaderLen;
     moduleInfo.pCode = (uint32_t*)shaderData;
     VK_CHECK(vkCreateShaderModule(r->m_dev, &moduleInfo, nullptr, &m_shader));
 
     // Pipeline
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = { };
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
     pipelineLayoutInfo.pSetLayouts = &m_descriptorLayout;
     VK_CHECK(vkCreatePipelineLayout(r->m_dev, &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
 
-    VkPipelineShaderStageCreateInfo stageInfo = {};
+    VkPipelineShaderStageCreateInfo stageInfo = { };
     stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
     stageInfo.pName = "main";
     stageInfo.module = m_shader;
 
-    VkComputePipelineCreateInfo pipelineInfo = {};
+    VkComputePipelineCreateInfo pipelineInfo = { };
     pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
     pipelineInfo.layout = m_pipelineLayout;
     pipelineInfo.stage = stageInfo;
@@ -211,7 +211,7 @@ void FormatConverter::init(
 }
 
 void FormatConverter::Convert(uint8_t** data, int* linesize) {
-    VkCommandBufferBeginInfo commandBufferBegin = {};
+    VkCommandBufferBeginInfo commandBufferBegin = { };
     commandBufferBegin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     VK_CHECK(vkBeginCommandBuffer(m_commandBuffer, &commandBufferBegin));
 
@@ -221,11 +221,11 @@ void FormatConverter::Convert(uint8_t** data, int* linesize) {
 
     std::vector<VkWriteDescriptorSet> descriptorWriteSets;
 
-    VkDescriptorImageInfo descriptorImageInfoIn = {};
+    VkDescriptorImageInfo descriptorImageInfoIn = { };
     descriptorImageInfoIn.imageView = m_view;
     descriptorImageInfoIn.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-    VkWriteDescriptorSet descriptorWriteSet = {};
+    VkWriteDescriptorSet descriptorWriteSet = { };
     descriptorWriteSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWriteSet.descriptorCount = 1;
     descriptorWriteSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
@@ -233,7 +233,7 @@ void FormatConverter::Convert(uint8_t** data, int* linesize) {
     descriptorWriteSet.dstBinding = 0;
     descriptorWriteSets.push_back(descriptorWriteSet);
 
-    VkDescriptorImageInfo descriptorImageInfoOuts[3] = {};
+    VkDescriptorImageInfo descriptorImageInfoOuts[3] = { };
     for (size_t i = 0; i < m_images.size(); ++i) {
         descriptorImageInfoOuts[i].imageView = m_images[i].view;
         descriptorImageInfoOuts[i].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -262,7 +262,7 @@ void FormatConverter::Convert(uint8_t** data, int* linesize) {
 
     VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 
-    VkSubmitInfo submitInfo = {};
+    VkSubmitInfo submitInfo = { };
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &m_semaphore;
@@ -282,7 +282,7 @@ void FormatConverter::Convert(uint8_t** data, int* linesize) {
 void FormatConverter::Sync() {
     VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
-    VkSubmitInfo submitInfo = {};
+    VkSubmitInfo submitInfo = { };
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = &m_output.semaphore;

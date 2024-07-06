@@ -71,7 +71,7 @@ inline vr::HmdQuaternion_t HmdQuaternion_Init(double w, double x, double y, doub
 }
 
 inline vr::HmdRect2_t fov_to_tangents(FfiFov fov) {
-    auto proj_bounds = vr::HmdRect2_t {};
+    auto proj_bounds = vr::HmdRect2_t { };
     proj_bounds.vTopLeft.v[0] = tanf(fov.left);
     proj_bounds.vBottomRight.v[0] = tanf(fov.right);
     proj_bounds.vTopLeft.v[1] = tanf(fov.down);
@@ -83,7 +83,7 @@ inline vr::HmdRect2_t fov_to_tangents(FfiFov fov) {
 inline vr::HmdMatrix34_t pose_to_mat(FfiPose pose) {
     FfiQuat o = pose.orientation;
 
-    vr::HmdMatrix34_t mat = {};
+    vr::HmdMatrix34_t mat = { };
 
     mat.m[0][0] = 1.0f - 2.0f * (o.y * o.y + o.z * o.z);
     mat.m[0][1] = 2.0f * (o.x * o.y - o.w * o.z);

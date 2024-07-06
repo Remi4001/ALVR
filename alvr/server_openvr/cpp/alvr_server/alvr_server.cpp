@@ -3,8 +3,6 @@
 #include <windows.h>
 #elif __APPLE__
 #include "platform/macos/CEncoder.h"
-#else
-#include "platform/linux/CEncoder.h"
 #endif
 #include "Controller.h"
 #include "FakeViveTracker.h"
@@ -136,22 +134,28 @@ public:
                 if (this->left_controller
                     && haptics.containerHandle == this->left_controller->prop_container) {
                     id = HAND_LEFT_ID;
-                } else if (this->right_controller
-                           && haptics.containerHandle == this->right_controller->prop_container) {
+                } else if (
+                    this->right_controller
+                    && haptics.containerHandle == this->right_controller->prop_container
+                ) {
                     id = HAND_RIGHT_ID;
                 }
 
                 HapticsSend(id, haptics.fDurationSeconds, haptics.fFrequency, haptics.fAmplitude);
             }
+
+// remove?
 #ifdef __linux__
-            else if (event.eventType == vr::VREvent_ChaperoneUniverseHasChanged
-                     || event.eventType == vr::VREvent_ChaperoneRoomSetupCommitted
-                     || event.eventType == vr::VREvent_ChaperoneFlushCache
-                     || event.eventType == vr::VREvent_ChaperoneSettingsHaveChanged
-                     || event.eventType == vr::VREvent_SeatedZeroPoseReset
-                     || event.eventType == vr::VREvent_StandingZeroPoseReset
-                     || event.eventType == vr::VREvent_SceneApplicationChanged
-                     || event.eventType == VendorEvent_ALVRDriverResync) {
+            else if (
+                event.eventType == vr::VREvent_ChaperoneUniverseHasChanged
+                || event.eventType == vr::VREvent_ChaperoneRoomSetupCommitted
+                || event.eventType == vr::VREvent_ChaperoneFlushCache
+                || event.eventType == vr::VREvent_ChaperoneSettingsHaveChanged
+                || event.eventType == vr::VREvent_SeatedZeroPoseReset
+                || event.eventType == vr::VREvent_StandingZeroPoseReset
+                || event.eventType == vr::VREvent_SceneApplicationChanged
+                || event.eventType == VendorEvent_ALVRDriverResync
+            ) {
                 if (hmd && hmd->m_poseHistory) {
                     auto rawZeroPose = GetRawZeroPose();
                     if (rawZeroPose != nullptr) {
@@ -300,44 +304,50 @@ bool InitializeStreaming(Settings settings) {
 
             auto leftElbowTracker = std::make_unique<FakeViveTracker>(BODY_LEFT_ELBOW_ID);
             if (leftElbowTracker->register_device(true)) {
-                g_driver_provider.tracked_devices.insert({ BODY_LEFT_ELBOW_ID,
-                                                           leftElbowTracker.get() });
+                g_driver_provider.tracked_devices.insert(
+                    { BODY_LEFT_ELBOW_ID, leftElbowTracker.get() }
+                );
                 g_driver_provider.generic_trackers.push_back(std::move(leftElbowTracker));
             }
 
             auto rightElbowTracker = std::make_unique<FakeViveTracker>(BODY_RIGHT_ELBOW_ID);
             if (rightElbowTracker->register_device(true)) {
-                g_driver_provider.tracked_devices.insert({ BODY_RIGHT_ELBOW_ID,
-                                                           rightElbowTracker.get() });
+                g_driver_provider.tracked_devices.insert(
+                    { BODY_RIGHT_ELBOW_ID, rightElbowTracker.get() }
+                );
                 g_driver_provider.generic_trackers.push_back(std::move(rightElbowTracker));
             }
 
             if (Settings_Instance()->m_bodyTrackingHasLegs) {
                 auto leftKneeTracker = std::make_unique<FakeViveTracker>(BODY_LEFT_KNEE_ID);
                 if (leftKneeTracker->register_device(true)) {
-                    g_driver_provider.tracked_devices.insert({ BODY_LEFT_KNEE_ID,
-                                                               leftKneeTracker.get() });
+                    g_driver_provider.tracked_devices.insert(
+                        { BODY_LEFT_KNEE_ID, leftKneeTracker.get() }
+                    );
                     g_driver_provider.generic_trackers.push_back(std::move(leftKneeTracker));
                 }
 
                 auto leftFootTracker = std::make_unique<FakeViveTracker>(BODY_LEFT_FOOT_ID);
                 if (leftFootTracker->register_device(true)) {
-                    g_driver_provider.tracked_devices.insert({ BODY_LEFT_FOOT_ID,
-                                                               leftFootTracker.get() });
+                    g_driver_provider.tracked_devices.insert(
+                        { BODY_LEFT_FOOT_ID, leftFootTracker.get() }
+                    );
                     g_driver_provider.generic_trackers.push_back(std::move(leftFootTracker));
                 }
 
                 auto rightKneeTracker = std::make_unique<FakeViveTracker>(BODY_RIGHT_KNEE_ID);
                 if (rightKneeTracker->register_device(true)) {
-                    g_driver_provider.tracked_devices.insert({ BODY_RIGHT_KNEE_ID,
-                                                               rightKneeTracker.get() });
+                    g_driver_provider.tracked_devices.insert(
+                        { BODY_RIGHT_KNEE_ID, rightKneeTracker.get() }
+                    );
                     g_driver_provider.generic_trackers.push_back(std::move(rightKneeTracker));
                 }
 
                 auto rightFootTracker = std::make_unique<FakeViveTracker>(BODY_RIGHT_FOOT_ID);
                 if (rightFootTracker->register_device(true)) {
-                    g_driver_provider.tracked_devices.insert({ BODY_RIGHT_FOOT_ID,
-                                                               rightFootTracker.get() });
+                    g_driver_provider.tracked_devices.insert(
+                        { BODY_RIGHT_FOOT_ID, rightFootTracker.get() }
+                    );
                     g_driver_provider.generic_trackers.push_back(std::move(rightFootTracker));
                 }
             }
@@ -362,9 +372,15 @@ void DeinitializeStreaming() {
 void SendVSync() { vr::VRServerDriverHost()->VsyncEvent(0.0); }
 
 void RequestIDR() {
+#ifdef _WIN32
     if (g_driver_provider.hmd && g_driver_provider.hmd->m_encoder) {
         g_driver_provider.hmd->m_encoder->InsertIDR();
     }
+#elif __linux__
+    if (g_driver_provider.hmd && g_driver_provider.hmd->m_directModeComponent) {
+        g_driver_provider.hmd->m_directModeComponent->RequestIdr();
+    }
+#endif
 }
 
 void SetTracking(
@@ -427,7 +443,7 @@ void SetTracking(
 void RequestDriverResync() {
     if (g_driver_provider.hmd) {
         vr::VRServerDriverHost()->VendorSpecificEvent(
-            g_driver_provider.hmd->object_id, VendorEvent_ALVRDriverResync, {}, 0
+            g_driver_provider.hmd->object_id, VendorEvent_ALVRDriverResync, { }, 0
         );
     }
 }
@@ -435,7 +451,7 @@ void RequestDriverResync() {
 void ShutdownSteamvr() {
     if (g_driver_provider.hmd) {
         vr::VRServerDriverHost()->VendorSpecificEvent(
-            g_driver_provider.hmd->object_id, vr::VREvent_DriverRequestedQuit, {}, 0
+            g_driver_provider.hmd->object_id, vr::VREvent_DriverRequestedQuit, { }, 0
         );
     }
 }
@@ -484,8 +500,9 @@ void SetButton(unsigned long long buttonID, FfiButtonValue value) {
         if (g_driver_provider.left_hand_tracker) {
             g_driver_provider.left_hand_tracker->SetButton(buttonID, value);
         }
-    } else if (RIGHT_CONTROLLER_BUTTON_MAPPING.find(buttonID)
-               != RIGHT_CONTROLLER_BUTTON_MAPPING.end()) {
+    } else if (
+        RIGHT_CONTROLLER_BUTTON_MAPPING.find(buttonID) != RIGHT_CONTROLLER_BUTTON_MAPPING.end()
+    ) {
         if (g_driver_provider.right_controller) {
             g_driver_provider.right_controller->SetButton(buttonID, value);
         }
@@ -506,9 +523,9 @@ void SetChaperoneArea(float areaWidth, float areaHeight) {
 }
 
 void CaptureFrame() {
-#ifndef __APPLE__
-    if (g_driver_provider.hmd && g_driver_provider.hmd->m_encoder) {
-        g_driver_provider.hmd->m_encoder->CaptureFrame();
-    }
+#if _WIN32
+    // if (g_driver_provider.hmd && g_driver_provider.hmd->m_encoder) {
+    //     g_driver_provider.hmd->m_encoder->CaptureFrame();
+    // }
 #endif
 }

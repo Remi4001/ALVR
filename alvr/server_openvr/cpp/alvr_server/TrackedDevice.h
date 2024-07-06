@@ -34,8 +34,8 @@ protected:
 
 private:
     ActivationState activation_state = ActivationState::Pending;
-    std::mutex activation_mutex = {};
-    std::condition_variable activation_condvar = {};
+    std::mutex activation_mutex = { };
+    std::condition_variable activation_condvar = { };
 
     // ITrackedDeviceServerDriver
     vr::EVRInitError Activate(vr::TrackedDeviceIndex_t object_id) final;

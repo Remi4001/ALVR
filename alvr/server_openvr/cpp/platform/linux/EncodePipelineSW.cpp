@@ -61,7 +61,7 @@ alvr::EncodePipelineSW::EncodePipelineSW(Renderer* render, uint32_t width, uint3
         break;
     }
 
-    auto params = FfiDynamicEncoderParams {};
+    auto params = FfiDynamicEncoderParams { };
     params.updated = true;
     params.bitrate_bps = 30'000'000;
     params.framerate = Settings_Instance()->m_refreshRate;

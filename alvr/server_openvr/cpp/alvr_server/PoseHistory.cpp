@@ -65,11 +65,11 @@ PoseHistory::GetBestPoseMatch(const vr::HmdMatrix34_t& pose) const {
     }
 
     Debug("PoseHistory::GetBestPoseMatch: No pose matched.");
-    return {};
+    return { };
 }
 
-std::optional<PoseHistory::TrackingHistoryFrame> PoseHistory::GetPoseAt(uint64_t timestampNs
-) const {
+std::optional<PoseHistory::TrackingHistoryFrame>
+PoseHistory::GetPoseAt(uint64_t timestampNs) const {
     std::unique_lock<std::mutex> lock(m_mutex);
     for (auto it = m_poseBuffer.rbegin(), end = m_poseBuffer.rend(); it != end; ++it) {
         if (it->targetTimestampNs == timestampNs)
@@ -77,7 +77,7 @@ std::optional<PoseHistory::TrackingHistoryFrame> PoseHistory::GetPoseAt(uint64_t
     }
 
     Debug("PoseHistory::GetPoseAt: No pose matched.");
-    return {};
+    return { };
 }
 
 void PoseHistory::SetTransform(const vr::HmdMatrix34_t& transform) {

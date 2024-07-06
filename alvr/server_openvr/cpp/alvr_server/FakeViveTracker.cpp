@@ -209,7 +209,7 @@ void FakeViveTracker::OnPoseUpdated(uint64_t targetTimestampNs, const FfiDeviceM
 
     bool tracked = motion != nullptr;
 
-    auto pose = vr::DriverPose_t {};
+    auto pose = vr::DriverPose_t { };
     pose.poseIsValid = tracked;
     pose.deviceIsConnected = tracked;
     pose.result = tracked ? vr::TrackingResult_Running_OK : vr::TrackingResult_Uninitialized;

@@ -199,7 +199,7 @@ bool Controller::OnPoseUpdate(uint64_t targetTimestampNs, float predictionS, Ffi
 
     auto vr_driver_input = vr::VRDriverInput();
 
-    auto pose = vr::DriverPose_t {};
+    auto pose = vr::DriverPose_t { };
     pose.poseIsValid = enabled;
     pose.deviceIsConnected = enabled;
     pose.result = enabled ? vr::TrackingResult_Running_OK : vr::TrackingResult_Uninitialized;
@@ -273,7 +273,7 @@ bool Controller::OnPoseUpdate(uint64_t targetTimestampNs, float predictionS, Ffi
     if (!enabled) {
         return false;
     } else if (handSkeleton != nullptr) {
-        vr::VRBoneTransform_t boneTransform[SKELETON_BONE_COUNT] = {};
+        vr::VRBoneTransform_t boneTransform[SKELETON_BONE_COUNT] = { };
 
         boneTransform[0].orientation.w = 1.0;
         boneTransform[0].orientation.x = 0.0;

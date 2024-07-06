@@ -78,11 +78,11 @@ void VideoEncoderVPL::Transmit(
 
     auto encSurface = VplImportTexture(pTexture);
 
-    mfxEncodeCtrl encodeCtrl = {};
+    mfxEncodeCtrl encodeCtrl = { };
     encodeCtrl.FrameType = insertIDR ? MFX_FRAMETYPE_IDR : 0;
 
     mfxStatus sts = MFX_ERR_NONE;
-    mfxSyncPoint syncp = {};
+    mfxSyncPoint syncp = { };
     bool isEncGoing = true;
     bool isDraining = false;
 
@@ -216,7 +216,7 @@ void VideoEncoderVPL::InitVplEncode() {
 mfxFrameSurface1* VideoEncoderVPL::VplImportTexture(ID3D11Texture2D* texture) {
     m_pD3DRender->GetContext()->CopyResource(m_transferTex.p, texture);
 
-    mfxSurfaceD3D11Tex2D extSurfD3D11 = {};
+    mfxSurfaceD3D11Tex2D extSurfD3D11 = { };
     extSurfD3D11.SurfaceInterface.Header.SurfaceType = MFX_SURFACE_TYPE_D3D11_TEX2D;
     extSurfD3D11.SurfaceInterface.Header.SurfaceFlags
         = MFX_SURFACE_FLAG_IMPORT_SHARED | MFX_SURFACE_FLAG_IMPORT_COPY;

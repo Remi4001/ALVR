@@ -54,11 +54,11 @@ private:
     mfxU32 m_vplQualityPreset;
     mfxU32 m_vplRateControlMode;
     DXGI_FORMAT m_dxColorFormat;
-    mfxVideoParam m_vplEncodeParams = {};
+    mfxVideoParam m_vplEncodeParams = { };
 
     mfxLoader m_vplLoader = nullptr;
     mfxSession m_vplSession = nullptr;
-    mfxBitstream m_vplBitstream = {};
+    mfxBitstream m_vplBitstream = { };
     mfxMemoryInterface* m_vplMemoryInterface = nullptr;
     CComPtr<ID3D11Texture2D> m_transferTex;
 };

@@ -1,0 +1,13 @@
+name: Interminal MCP server
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Terminal interaction
+    command: uvx
+    args:
+      - "--default-index"
+      - "https://pypi.org/simple"
+      - "--from"
+      - "mcp-interminal"
+      - "interminal"
+    env: {}

@@ -29,7 +29,7 @@ void OvrDirectModeComponent::CreateSwapTextureSet(
     // HRESULT hr = D3D11CreateDevice(pAdapter, D3D_DRIVER_TYPE_HARDWARE, NULL, creationFlags, NULL,
     // 0, D3D11_SDK_VERSION, &pDevice, &eFeatureLevel, &pContext);
 
-    D3D11_TEXTURE2D_DESC SharedTextureDesc = {};
+    D3D11_TEXTURE2D_DESC SharedTextureDesc = { };
     DXGI_FORMAT format = (DXGI_FORMAT)pSwapTextureSetDesc->nFormat;
     SharedTextureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
     if (format == DXGI_FORMAT_R32G8X24_TYPELESS || format == DXGI_FORMAT_R32_TYPELESS) {
@@ -239,7 +239,8 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
         // Access to shared texture must be wrapped in AcquireSync/ReleaseSync
         // to ensure the compositor has finished rendering to it before it gets used.
         // This enforces scheduling of work on the gpu between processes.
-        if (SUCCEEDED(pSyncTexture->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)&pKeyedMutex)
+        if (SUCCEEDED(
+                pSyncTexture->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)&pKeyedMutex)
             )) {
             // TODO: Reasonable timeout and timeout handling
             HRESULT hr = pKeyedMutex->AcquireSync(0, 10);

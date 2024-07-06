@@ -7,7 +7,7 @@
 TrackedDevice::TrackedDevice(uint64_t device_id, vr::ETrackedDeviceClass device_class)
     : device_id(device_id)
     , device_class(device_class) {
-    this->last_pose = vr::DriverPose_t {};
+    this->last_pose = vr::DriverPose_t { };
     this->last_pose.poseIsValid = false;
     this->last_pose.deviceIsConnected = false;
     this->last_pose.result = vr::TrackingResult_Uninitialized;
@@ -46,7 +46,7 @@ void TrackedDevice::set_prop(FfiOpenvrProperty prop) {
     } else if (prop.type == FfiOpenvrPropertyType::Uint64) {
         result = props->SetUint64Property(this->prop_container, key, prop.value.uint64);
     } else if (prop.type == FfiOpenvrPropertyType::Vector3) {
-        auto vec3 = vr::HmdVector3_t {};
+        auto vec3 = vr::HmdVector3_t { };
         vec3.v[0] = prop.value.vector3[0];
         vec3.v[1] = prop.value.vector3[1];
         vec3.v[2] = prop.value.vector3[2];
@@ -68,7 +68,7 @@ void TrackedDevice::set_prop(FfiOpenvrProperty prop) {
         );
     }
 
-    auto event_data = vr::VREvent_Data_t {};
+    auto event_data = vr::VREvent_Data_t { };
     event_data.property.container = this->prop_container;
     event_data.property.prop = key;
     vr::VRServerDriverHost()->VendorSpecificEvent(

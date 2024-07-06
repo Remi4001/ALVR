@@ -35,7 +35,7 @@ void RenderPipelineYUV::Initialize(
                                                                       : DXGI_FORMAT_R16_UNORM;
 
     // Create SRV for luminance (Y) plane
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDescY = {};
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDescY = { };
     srvDescY.Format = yFormat;
     srvDescY.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDescY.Texture2D.MostDetailedMip = 0;
@@ -47,7 +47,7 @@ void RenderPipelineYUV::Initialize(
     );
 
     // Create SRV for chrominance (UV) planes
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDescUV = {};
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDescUV = { };
     srvDescUV.Format = uvFormat;
     srvDescUV.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDescUV.Texture2D.MostDetailedMip = 0;
@@ -59,7 +59,7 @@ void RenderPipelineYUV::Initialize(
     );
 
     // Create luminance (Y) render target view
-    D3D11_RENDER_TARGET_VIEW_DESC rtvDescLuminance = {};
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDescLuminance = { };
     rtvDescLuminance.Format = yFormat;
     rtvDescLuminance.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
     rtvDescLuminance.Texture2D.MipSlice = 0;
@@ -70,7 +70,7 @@ void RenderPipelineYUV::Initialize(
     );
 
     // Create chrominance (UV) render target view
-    D3D11_RENDER_TARGET_VIEW_DESC rtvDescChrominance = {};
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDescChrominance = { };
     rtvDescChrominance.Format = uvFormat;
     rtvDescChrominance.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
     rtvDescChrominance.Texture2D.MipSlice = 0;
