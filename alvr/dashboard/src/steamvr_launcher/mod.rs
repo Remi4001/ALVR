@@ -142,19 +142,6 @@ impl Launcher {
             warn!("Failed to unblock ALVR driver: {:?}", err);
         }
 
-        #[cfg(target_os = "linux")]
-        {
-            let vrcompositor_wrap_result = linux_steamvr::maybe_wrap_vrcompositor_launcher();
-            alvr_common::show_err(linux_steamvr::maybe_wrap_vrcompositor_launcher());
-            if vrcompositor_wrap_result.is_err() {
-                return;
-            }
-        }
-
-        if is_steamvr_running() {
-            return;
-        }
-
         debug!("SteamVR is dead. Launching...");
 
         if data_sources::get_read_only_local_session()
