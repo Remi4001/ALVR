@@ -135,7 +135,7 @@ impl Layout {
             let config_dir = option_env!("ALVR_CONFIG_DIR")
                 .map_or_else(|| dirs::config_dir().unwrap().join("alvr"), PathBuf::from);
             let log_dir = option_env!("ALVR_LOG_DIR")
-                .map_or_else(|| dirs::home_dir().unwrap(), PathBuf::from);
+                .map_or_else(|| dirs::cache_dir().unwrap().join("alvr"), PathBuf::from);
 
             Self {
                 executables_dir,
