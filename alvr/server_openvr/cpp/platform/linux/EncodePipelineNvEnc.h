@@ -18,7 +18,6 @@ class EncodePipelineNvEnc : public EncodePipeline {
 public:
     ~EncodePipelineNvEnc();
     EncodePipelineNvEnc(
-        Renderer* render,
         HWContext& vk_ctx,
         VkContext& v_ctx,
         VkFrame& input_frame,

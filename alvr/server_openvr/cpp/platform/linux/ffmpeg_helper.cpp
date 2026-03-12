@@ -37,26 +37,26 @@ std::string alvr::AvException::makemsg(const std::string& msg, int averror) {
     return msg + " " + av_msg;
 }
 
-// alvr::VkFrameCtx::VkFrameCtx(VkContext& vkContext, vk::ImageCreateInfo image_create_info) {
-//     AVHWFramesContext* frames_ctx = NULL;
-//     int err = 0;
+alvr::VkFrameCtx::VkFrameCtx(HWContext& vkContext, vk::ImageCreateInfo image_create_info) {
+    AVHWFramesContext* frames_ctx = NULL;
+    int err = 0;
 
-//     if (!(ctx = av_hwframe_ctx_alloc(vkContext.ctx))) {
-//         throw std::runtime_error("Failed to create vulkan frame context.");
-//     }
-//     frames_ctx = (AVHWFramesContext*)(ctx->data);
-//     frames_ctx->format = AV_PIX_FMT_VULKAN;
-//     frames_ctx->sw_format = vk_format_to_av_format(image_create_info.format);
-//     frames_ctx->width = image_create_info.extent.width;
-//     frames_ctx->height = image_create_info.extent.height;
-//     frames_ctx->initial_pool_size = 0;
-//     if ((err = av_hwframe_ctx_init(ctx)) < 0) {
-//         av_buffer_unref(&ctx);
-//         throw alvr::AvException("Failed to initialize vulkan frame context:", err);
-//     }
-// }
+    if (!(ctx = av_hwframe_ctx_alloc(vkContext.avCtx))) {
+        throw std::runtime_error("Failed to create vulkan frame context.");
+    }
+    frames_ctx = (AVHWFramesContext*)(ctx->data);
+    frames_ctx->format = AV_PIX_FMT_VULKAN;
+    frames_ctx->sw_format = vk_format_to_av_format(image_create_info.format);
+    frames_ctx->width = image_create_info.extent.width;
+    frames_ctx->height = image_create_info.extent.height;
+    frames_ctx->initial_pool_size = 0;
+    if ((err = av_hwframe_ctx_init(ctx)) < 0) {
+        av_buffer_unref(&ctx);
+        throw alvr::AvException("Failed to initialize vulkan frame context:", err);
+    }
+}
 
-// alvr::VkFrameCtx::~VkFrameCtx() { av_buffer_unref(&ctx); }
+alvr::VkFrameCtx::~VkFrameCtx() { av_buffer_unref(&ctx); }
 
 alvr::VkFrame::VkFrame(
     const VkContext& vk_ctx,

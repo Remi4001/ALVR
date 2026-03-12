@@ -33,18 +33,18 @@ std::unique_ptr<alvr::EncodePipeline> alvr::EncodePipeline::Create(
     if (Settings::Instance().m_force_sw_encoding == false) {
         alvr::HWContext hwCtx(vk_ctx);
         if (vk_ctx.meta.vendor == Vendor::Nvidia) {
-            // try {
-            //     auto nvenc = std::make_unique<alvr::EncodePipelineNvEnc>(
-            //         render, vk_ctx, input_frame, image_create_info, width, height
-            //     );
-            //     Info("Using NvEnc encoder");
-            //     return nvenc;
-            // } catch (std::exception& e) {
-            //     Error(
-            //         "Failed to create NvEnc encoder: %s\nPlease make sure you have installed CUDA
-            //         " "runtime.", e.what()
-            //     );
-            // }
+            try {
+                auto nvenc = std::make_unique<alvr::EncodePipelineNvEnc>(
+                    hwCtx, vk_ctx, input_frame, width, height
+                );
+                Info("Using NvEnc encoder");
+                return nvenc;
+            } catch (std::exception& e) {
+                Error(
+                    "Failed to create NvEnc encoder: %s\nPlease make sure you have installed CUDA "
+                    "runtime.", e.what()
+                );
+            }
         } else {
             try {
                 auto vaapi = std::make_unique<alvr::EncodePipelineVAAPI>(

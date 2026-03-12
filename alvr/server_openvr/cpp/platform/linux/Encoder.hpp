@@ -222,7 +222,7 @@ public:
         // TODO: Fix this memory leakage
 
         // TODO: The EncodePipeline should store this on it's own
-        auto& avHwCtx = *new alvr::HWContext(vkCtx);
+        // auto& avHwCtx = *new alvr::HWContext(vkCtx);
 
         auto out = renderer.get().getOutput();
 

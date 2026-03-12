@@ -62,7 +62,6 @@ void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
 
 } // namespace
 alvr::EncodePipelineNvEnc::EncodePipelineNvEnc(
-    Renderer* render,    
     HWContext& vk_ctx,
     VkContext& v_ctx,
     VkFrame& input_frame,
@@ -70,9 +69,10 @@ alvr::EncodePipelineNvEnc::EncodePipelineNvEnc(
     uint32_t height
 ) 
     : v_ctx(v_ctx) {
-    // vk_frame_ctx = std::make_unique<alvr::VkFrameCtx>(v_ctx, nullptr);
+    VkImageCreateInfo create_info = input_frame.imageInfo();
+    vk_frame_ctx = std::make_unique<alvr::VkFrameCtx>(vk_ctx, *reinterpret_cast<vk::ImageCreateInfo*>(&create_info));
 
-    auto input_frame_ctx = (AVHWFramesContext*)vk_frame_ctx->ctx->data;
+    auto input_frame_ctx = (AVHWFramesContext*)vk_ctx.avCtx->data;
     assert(input_frame_ctx->sw_format == AV_PIX_FMT_BGRA);
 
     int err;
