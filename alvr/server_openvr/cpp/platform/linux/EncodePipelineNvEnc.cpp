@@ -46,7 +46,7 @@ void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
      *
      * We just to ignore the alpha channel and it's done
      */
-    frames_ctx->sw_format = AV_PIX_FMT_BGR0;
+    frames_ctx->sw_format = AV_PIX_FMT_RGB0;
     frames_ctx->width = ctx->width;
     frames_ctx->height = ctx->height;
     if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
@@ -72,8 +72,8 @@ alvr::EncodePipelineNvEnc::EncodePipelineNvEnc(
     VkImageCreateInfo create_info = input_frame.imageInfo();
     vk_frame_ctx = std::make_unique<alvr::VkFrameCtx>(vk_ctx, *reinterpret_cast<vk::ImageCreateInfo*>(&create_info));
 
-    auto input_frame_ctx = (AVHWFramesContext*)vk_ctx.avCtx->data;
-    assert(input_frame_ctx->sw_format == AV_PIX_FMT_BGRA);
+    auto input_frame_ctx = (AVHWFramesContext*)vk_frame_ctx->ctx->data;
+    // assert(input_frame_ctx->sw_format == AV_PIX_FMT_BGRA);
 
     int err;
     vk_frame = input_frame.make_av_frame(*vk_frame_ctx);
