@@ -39,6 +39,7 @@ auto makeSpecs(T... args)
                 .size = Size,
             }
         );
+        index++;
     };
 
     (put(args), ...);
