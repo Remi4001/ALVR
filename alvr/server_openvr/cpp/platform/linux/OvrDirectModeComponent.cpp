@@ -54,7 +54,11 @@ void OvrDirectModeComponent::CreateSwapTextureSet(
         );
 
         uint64_t ipcHandle = 0;
-        vr::VRIPCResourceManager()->RefResource(myHandle, &ipcHandle);
+        bool ret = vr::VRIPCResourceManager()->RefResource(myHandle, &ipcHandle);
+        if (ret == false) {
+            Error("Failed to get ipcHandle for texture\n");
+            break;
+        }
 
         if (!success) {
             Error("VRCIPCResourceManager: Failed to create shared texture\n");
@@ -67,7 +71,7 @@ void OvrDirectModeComponent::CreateSwapTextureSet(
         }
 
         int fd = 0;
-        auto ret = vr::VRIPCResourceManager()->ReceiveSharedFd(ipcHandle, &fd);
+        ret = vr::VRIPCResourceManager()->ReceiveSharedFd(ipcHandle, &fd);
         if (ret == false) {
             Error("Failed to get fd for texture\n");
             break;
