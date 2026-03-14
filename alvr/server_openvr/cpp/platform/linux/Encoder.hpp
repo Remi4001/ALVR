@@ -38,6 +38,7 @@ auto makeSpecs(T... args)
             .offset = static_cast<uint32_t>(index * Size),
             .size = Size,
         });
+        index++;
     };
 
     (put(args), ...);
