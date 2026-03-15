@@ -17,17 +17,17 @@ use std::{
 
 use pipewire::{
     channel::Receiver,
-    context::Context,
+    context::ContextBox,
     core::Core,
     keys,
-    main_loop::MainLoop,
+    main_loop::{MainLoopBox, MainLoopRc},
     properties,
     spa::{
         param::audio::{AudioFormat, AudioInfoRaw},
         pod::{self, Pod, Value, serialize::PodSerializer},
         utils::Direction,
     },
-    stream::{Stream, StreamFlags, StreamListener, StreamState},
+    stream::{Stream, StreamBox, StreamFlags, StreamListener, StreamState},
 };
 
 pub fn try_load_pipewire() -> Result<()> {
@@ -59,8 +59,8 @@ pub fn try_load_pipewire() -> Result<()> {
 }
 
 fn probe_pipewire() -> Result<(), pipewire::Error> {
-    let mainloop = MainLoop::new(None)?;
-    let context = Context::new(&mainloop)?;
+    let mainloop = MainLoopBox::new(None)?;
+    let context = ContextBox::new(&mainloop.loop_(), None)?;
     context.connect(None)?;
     Ok(())
 }
@@ -159,14 +159,14 @@ fn pw_main_loop(
     mic_info: Option<AudioInfo>,
 ) -> Result<(), pipewire::Error> {
     debug!("Starting pipewire thread");
-    let mainloop = MainLoop::new(None)?;
+    let mainloop = MainLoopRc::new(None)?;
 
     let _receiver = pw_receiver.attach(mainloop.as_ref(), {
         let mainloop = mainloop.clone();
         move |_| mainloop.quit()
     });
 
-    let context = Context::new(&mainloop)?;
+    let context = ContextBox::new(&mainloop.loop_(), None)?;
     let pw_core = context.connect(None)?;
 
     let _speaker = if let Some(info) = speaker_info {
@@ -218,8 +218,8 @@ fn create_speaker_stream(
     mut sender: StreamSender<()>,
     sample_rate: u32,
     channel_count: u32,
-) -> Result<(Stream, StreamListener<i16>), pipewire::Error> {
-    let stream = Stream::new(
+) -> Result<(StreamBox<'_>, StreamListener<i16>), pipewire::Error> {
+    let stream = StreamBox::new(
         pw_core,
         "alvr-audio",
         properties::properties! {
@@ -269,8 +269,8 @@ fn create_mic_stream(
     sample_queue: Arc<Mutex<VecDeque<f32>>>,
     sample_rate: u32,
     channel_count: u32,
-) -> Result<(Stream, StreamListener<f32>), pipewire::Error> {
-    let stream = Stream::new(
+) -> Result<(StreamBox<'_>, StreamListener<f32>), pipewire::Error> {
+    let stream = StreamBox::new(
         pw_core,
         "alvr-mic",
         properties::properties! {
@@ -318,7 +318,7 @@ fn fill_pw_buf(
     sample_queue: Arc<Mutex<VecDeque<f32>>>,
     chan_size: usize,
     chan_count: usize,
-    stream: &pipewire::stream::StreamRef,
+    stream: &Stream,
 ) {
     if let Some(mut pw_buf) = stream.dequeue_buffer() {
         let requested = pw_buf.requested() as usize;
