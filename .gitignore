@@ -73,3 +73,6 @@ CMakeLists.txt
 cmake-build-debug/
 
 *.jks
+
+# Clang lsp
+.clangd
