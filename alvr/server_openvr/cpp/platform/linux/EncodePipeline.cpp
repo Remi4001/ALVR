@@ -6,6 +6,9 @@
 #include "alvr_server/Logger.h"
 #include "alvr_server/Settings.h"
 #include "ffmpeg_helper.h"
+#include "platform/linux/EncodePipelineVulkan.h"
+#include <exception>
+#include <memory>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -32,6 +35,15 @@ std::unique_ptr<alvr::EncodePipeline> alvr::EncodePipeline::Create(
     using alvr::Vendor;
     if (Settings::Instance().m_force_sw_encoding == false) {
         alvr::HWContext hwCtx(vk_ctx);
+        try {
+            auto vulkan = std::make_unique<alvr::EncodePipelineVulkan>(
+                hwCtx, devicePath, vk_ctx.meta.vendor, input_frame, width, height
+            );
+            Info("Using Vulkan encoder");
+            return vulkan;
+        } catch (std::exception& e) {
+            Error("Failed to create Vulkan encoder: %s", e.what());
+        }
         if (vk_ctx.meta.vendor == Vendor::Nvidia) {
             try {
                 auto nvenc = std::make_unique<alvr::EncodePipelineNvEnc>(

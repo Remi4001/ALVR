@@ -21,7 +21,7 @@ void OvrDirectModeComponent::CreateSwapTextureSet(
     const SwapTextureSetDesc_t* pSwapTextureSetDesc,
     SwapTextureSet_t* pOutSwapTextureSet
 ) {
-    Info(
+    Warn(
         "CreateSwapTextureSet pid=%d Format=%d %dx%d SampleCount=%d\n",
         unPid,
         pSwapTextureSetDesc->nFormat,
@@ -36,11 +36,12 @@ void OvrDirectModeComponent::CreateSwapTextureSet(
 
     {
         auto pid = getpid();
-        Info("VrServer PID %d\n", pid);
+        Warn("VrServer PID %d\n", pid);
     }
 
     for (int i = 0; i < 3; i++) {
         vr::SharedTextureHandle_t myHandle = 0;
+        // TODO: do these have VK_USAGE_IMAGE_VIDEO_ENCODE_SRC_BIT_KHR ?
         bool success = vr::VRIPCResourceManager()->NewSharedVulkanImage(
             pSwapTextureSetDesc->nFormat,
             pSwapTextureSetDesc->nWidth,
@@ -91,7 +92,7 @@ void OvrDirectModeComponent::CreateSwapTextureSet(
 /** Used to textures created using CreateSwapTextureSet.  Only one of the set's handles needs to be
  * used to destroy the entire set. */
 void OvrDirectModeComponent::DestroySwapTextureSet(vr::SharedTextureHandle_t sharedTextureHandle) {
-    Info("DestroySwapTextureSet %p\n", sharedTextureHandle);
+    Warn("DestroySwapTextureSet %p\n", sharedTextureHandle);
 
     auto id = m_handleMap.find(sharedTextureHandle);
     if (id != m_handleMap.end()) {
@@ -106,13 +107,13 @@ void OvrDirectModeComponent::DestroySwapTextureSet(vr::SharedTextureHandle_t sha
         m_handleMap.erase(p->sharedHandles[2]);
         delete p;
     } else {
-        Debug("Requested to destroy not managing texture. handle:%p\n", sharedTextureHandle);
+        Warn("Requested to destroy not managing texture. handle:%p\n", sharedTextureHandle);
     }
 }
 
 /** Used to purge all texture sets for a given process. */
 void OvrDirectModeComponent::DestroyAllSwapTextureSets(uint32_t unPid) {
-    Info("DestroyAllSwapTextureSets pid=%d\n", unPid);
+    Warn("DestroyAllSwapTextureSets pid=%d\n", unPid);
     for (auto it = m_handleMap.begin(); it != m_handleMap.end();) {
         if (it->second.first->pid == unPid) {
             if (it->second.second == 0) {
@@ -231,8 +232,8 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
                 .height = desc.nHeight,
             },
             .outputExtent {
-                .width = settings.m_recommendedTargetWidth,
-                .height = settings.m_recommendedTargetHeight,
+                .width = static_cast<uint32_t>(settings.m_recommendedTargetWidth),
+                .height = static_cast<uint32_t>(settings.m_recommendedTargetHeight),
             },
             .inputImgFds = fds,
         };

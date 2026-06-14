@@ -54,10 +54,14 @@ public:
 
         u32 queueFamily;
         u32 queueIndex;
+
+        u32 videoQueueFamily;
+        u32 videoQueueIndex;
     } meta;
 
 private:
     vk::Queue queue;
+    vk::Queue videoQueue;
 
     void sharedInit() {
         auto devProps = physDev.getProperties2();
@@ -127,18 +131,26 @@ public:
         auto queueFamilyProps = physDev.getQueueFamilyProperties();
 
         std::optional<u32> wantedQueueFamily;
+        std::optional<u32> wantedVideoQueueFamily;
 
         for (u32 i = 0; i < queueFamilyProps.size(); ++i) {
             auto& props = queueFamilyProps[i];
             bool isGraphics = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eGraphics);
             bool isCompute = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eCompute);
+            bool isVideo = static_cast<bool>(props.queueFlags & vk::QueueFlagBits::eVideoEncodeKHR);
 
             if (isCompute && (!wantedQueueFamily.has_value() || !isGraphics)) {
                 wantedQueueFamily = i;
             }
+            if (isVideo) {
+                wantedVideoQueueFamily = i;
+            }
         }
         meta.queueFamily = wantedQueueFamily.value();
         meta.queueIndex = 0;
+
+        meta.videoQueueFamily = wantedVideoQueueFamily.value();
+        meta.videoQueueIndex = 0;
 
         std::vector<std::string_view> wantedExts = {
             VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME,
@@ -152,6 +164,11 @@ public:
             VK_EXT_PHYSICAL_DEVICE_DRM_EXTENSION_NAME,
             VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
             VK_KHR_COPY_COMMANDS_2_EXTENSION_NAME,
+            VK_KHR_VIDEO_QUEUE_EXTENSION_NAME,
+            VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME,
+            VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME,
+            VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME,
+            VK_KHR_VIDEO_ENCODE_AV1_EXTENSION_NAME,
         };
 
         auto availExts = physDev.enumerateDeviceExtensionProperties();
@@ -171,6 +188,12 @@ public:
             .queueCount = 1,
             .pQueuePriorities = &queuePrio,
         };
+        vk::DeviceQueueCreateInfo videoQueueCI {
+            .queueFamilyIndex = meta.videoQueueFamily,
+            .queueCount = 1,
+            .pQueuePriorities = &queuePrio,
+        };
+        std::array queueCIs = { queueCI, videoQueueCI };
 
         meta.feats12 = vk::PhysicalDeviceVulkan12Features {
             .timelineSemaphore = 1,
@@ -186,7 +209,7 @@ public:
         vk::DeviceCreateInfo devCI {
             .pNext = &meta.feats,
             .queueCreateInfoCount = 1,
-            .pQueueCreateInfos = &queueCI,
+            .pQueueCreateInfos = queueCIs.data(),
             .enabledExtensionCount = static_cast<u32>(acquiredExts.size()),
             .ppEnabledExtensionNames = acquiredExts.data(),
         };
@@ -195,6 +218,7 @@ public:
         meta.devExtensions = acquiredExts;
 
         queue = dev.getQueue(wantedQueueFamily.value(), meta.queueIndex);
+        videoQueue = dev.getQueue(wantedVideoQueueFamily.value(), meta.videoQueueIndex);
 
         sharedInit();
     }
