@@ -1,8 +1,6 @@
-use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use alvr_common::anyhow::bail;
 use alvr_common::{debug, error, info, warn};
 use sysinfo::Process;
 
