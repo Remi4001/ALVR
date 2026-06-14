@@ -15,6 +15,7 @@ pub fn init_logging(event_sender: mpsc::Sender<PolledEvent>) {
         .filter(Some("ureq"), LevelFilter::Off)
         .filter(Some("wgpu_core"), LevelFilter::Off)
         .filter(Some("wgpu_hal"), LevelFilter::Off)
+        .filter(Some("winit"), LevelFilter::Off)
         .filter_level(if cfg!(debug_assertions) {
             LevelFilter::Debug
         } else {
