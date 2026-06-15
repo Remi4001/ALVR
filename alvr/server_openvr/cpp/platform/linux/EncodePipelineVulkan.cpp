@@ -83,11 +83,12 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
      */
     this->hw_ctx = vk_ctx.avCtx;
 
+    int err = 0;
     // TODO: useful?
-    int err = av_hwdevice_ctx_init(hw_ctx);
-    if (err < 0) {
-        throw alvr::AvException("Failed to create Vulkan device:", err);
-    }
+    // int err = av_hwdevice_ctx_init(hw_ctx);
+    // if (err < 0) {
+    //     throw alvr::AvException("Failed to create Vulkan device:", err);
+    // }
 
     const auto& settings = Settings::Instance();
 
