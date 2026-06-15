@@ -38,10 +38,10 @@ void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
     int err = 0;
 
     if (!(hw_frames_ref = av_hwframe_ctx_alloc(hw_device_ctx))) {
-        throw std::runtime_error("Failed to create VAAPI frame context.");
+        throw std::runtime_error("Failed to create Vulkan frame context.");
     }
     frames_ctx = (AVHWFramesContext*)(hw_frames_ref->data);
-    frames_ctx->format = AV_PIX_FMT_VAAPI;
+    frames_ctx->format = AV_PIX_FMT_VULKAN;
     frames_ctx->sw_format = (Settings::Instance().m_codec == ALVR_CODEC_HEVC
                              || Settings::Instance().m_codec == ALVR_CODEC_AV1)
             && Settings::Instance().m_use10bitEncoder
@@ -52,7 +52,7 @@ void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
     frames_ctx->initial_pool_size = 3;
     if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
         av_buffer_unref(&hw_frames_ref);
-        throw alvr::AvException("Failed to initialize VAAPI frame context:", err);
+        throw alvr::AvException("Failed to initialize Vulkan frame context:", err);
     }
     ctx->hw_frames_ctx = av_buffer_ref(hw_frames_ref);
     if (!ctx->hw_frames_ctx)
@@ -157,7 +157,7 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
     encoder_ctx->height = height;
     encoder_ctx->time_base = { 1, (int)1e9 };
     encoder_ctx->sample_aspect_ratio = AVRational { 1, 1 };
-    encoder_ctx->pix_fmt = AV_PIX_FMT_VAAPI;
+    encoder_ctx->pix_fmt = AV_PIX_FMT_VULKAN;
     encoder_ctx->max_b_frames = 0;
     encoder_ctx->color_range = AVCOL_RANGE_JPEG;
 
