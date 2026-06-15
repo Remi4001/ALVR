@@ -72,8 +72,8 @@ public:
         avVk->nb_comp_queues = 1;
         avVk->queue_family_comp_index = queueFam;
 
-        avVk->nb_encode_queues = 0;
-        avVk->queue_family_encode_index = -1;
+        avVk->nb_encode_queues = 1;
+        avVk->queue_family_encode_index = vkCtx.meta.videoQueueFamily;
 
         avVk->nb_decode_queues = 0;
         avVk->queue_family_decode_index = -1;

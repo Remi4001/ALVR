@@ -123,7 +123,7 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
 
         switch (settings.m_entropyCoding) {
         case ALVR_CABAC:
-            av_opt_set(encoder_ctx->priv_data, "coder", "ac", 0);
+            av_opt_set(encoder_ctx->priv_data, "coder", "cabac", 0);
             break;
         case ALVR_CAVLC:
             av_opt_set(encoder_ctx->priv_data, "coder", "vlc", 0);
@@ -143,15 +143,15 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
 
     switch (settings.m_rateControlMode) {
     case ALVR_VBR:
-        av_opt_set(encoder_ctx->priv_data, "rc_mode", "VBR", 0);
+        av_opt_set(encoder_ctx->priv_data, "rc_mode", "vbr", 0);
         break;
     case ALVR_CBR:
     default:
-        av_opt_set(encoder_ctx->priv_data, "rc_mode", "CBR", 0);
+        av_opt_set(encoder_ctx->priv_data, "rc_mode", "cbr", 0);
         break;
     }
 
-    av_opt_set_int(encoder_ctx->priv_data, "filler_data", settings.m_fillerData, 0);
+    // av_opt_set_int(encoder_ctx->priv_data, "filler_data", settings.m_fillerData, 0);
 
     encoder_ctx->width = width;
     encoder_ctx->height = height;
@@ -159,7 +159,7 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
     encoder_ctx->sample_aspect_ratio = AVRational { 1, 1 };
     encoder_ctx->pix_fmt = AV_PIX_FMT_VULKAN;
     encoder_ctx->max_b_frames = 0;
-    encoder_ctx->color_range = AVCOL_RANGE_JPEG;
+    // encoder_ctx->color_range = AVCOL_RANGE_JPEG;
 
     auto params = FfiDynamicEncoderParams {};
     params.updated = true;
