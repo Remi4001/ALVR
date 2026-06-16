@@ -65,12 +65,12 @@ void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
 
 alvr::EncodePipelineVulkan::EncodePipelineVulkan(
     alvr::HWContext& vk_ctx,
-    std::string devicePath,
     alvr::Vendor vendor,
-    VkFrame& input_frame, 
-    uint32_t width, 
+    alvr::VkFrame& input_frame,
+    uint32_t width,
     uint32_t height
 ) {
+    // TODO: rewrite comment
     /* Vulkan Encoding pipeline
      * The encoding pipeline has 3 frame types:
      * - input vulkan frames, only used to initialize the mapped frames
@@ -81,7 +81,13 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
      * The pipeline is simply made of a scale_vaapi object, that does the conversion between formats
      * and the encoder that takes the converted frame and produces packets.
      */
-    this->hw_ctx = vk_ctx.avCtx;
+    hw_ctx = av_buffer_ref(vk_ctx.avCtx);
+    VkImageCreateInfo create_info = input_frame.imageInfo();
+    vk_frame_ctx = std::make_unique<alvr::VkFrameCtx>(
+        vk_ctx, *reinterpret_cast<vk::ImageCreateInfo*>(&create_info)
+    );
+
+    vk_frame = input_frame.make_av_frame(*vk_frame_ctx);
 
     int err = 0;
     // TODO: useful?
@@ -161,17 +167,12 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
     encoder_ctx->max_b_frames = 0;
     // encoder_ctx->color_range = AVCOL_RANGE_JPEG;
 
-    auto params = FfiDynamicEncoderParams {};
+    auto params = FfiDynamicEncoderParams { };
     params.updated = true;
     params.bitrate_bps = 30'000'000;
     params.framerate = settings.m_refreshRate;
     SetParams(params);
 
-    vlVaQualityBits quality = {};
-    quality.vbaq_mode
-        = Settings::Instance()
-              .m_enableVbaq; // No noticable performance difference and should improve subjective
-                             // quality by allocating more bits to smooth areas
     // switch (settings.m_encoderQualityPreset) {
     // case ALVR_QUALITY:
     //     if (vendor == Vendor::Amd) {
@@ -211,86 +212,6 @@ alvr::EncodePipelineVulkan::EncodePipelineVulkan(
     if (err < 0) {
         throw alvr::AvException("Cannot open video encoder codec:", err);
     }
-
-    AVBufferRef* hw_frames_ref;
-    if (!(hw_frames_ref = av_hwframe_ctx_alloc(hw_ctx))) {
-        throw std::runtime_error("Failed to create Vulkan frame context.");
-    }
-    auto frames_ctx = (AVHWFramesContext*)(hw_frames_ref->data);
-    frames_ctx->format = AV_PIX_FMT_VULKAN;
-    frames_ctx->sw_format = input_frame.avFormat();
-    frames_ctx->width = input_frame.imageInfo().extent.width;
-    frames_ctx->height = input_frame.imageInfo().extent.height;
-    frames_ctx->initial_pool_size = 1;
-    if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
-        av_buffer_unref(&hw_frames_ref);
-        throw alvr::AvException("Failed to initialize Vulkan frame context:", err);
-    }
-
-    encoder_frame = av_frame_alloc();
-
-    filter_graph = avfilter_graph_alloc();
-
-    AVFilterInOut* outputs = avfilter_inout_alloc();
-    AVFilterInOut* inputs = avfilter_inout_alloc();
-
-    // TODO: Respect colorspace
-    std::stringstream buffer_filter_args;
-    buffer_filter_args << "video_size=" << encoder_frame->width << "x" << encoder_frame->height;
-    buffer_filter_args << ":time_base=" << encoder_ctx->time_base.num << "/"
-                       << encoder_ctx->time_base.den;
-    filter_in = avfilter_graph_alloc_filter(filter_graph, avfilter_get_by_name("buffer"), "in");
-    if (!filter_in) {
-        throw std::runtime_error("filter_in allocation failed");
-    }
-    AVBufferSrcParameters* par = av_buffersrc_parameters_alloc();
-    par->format = encoder_frame->format;
-    par->hw_frames_ctx = av_buffer_ref(encoder_frame->hw_frames_ctx);
-    av_buffersrc_parameters_set(filter_in, par);
-    av_free(par);
-    if ((err = avfilter_init_str(filter_in, buffer_filter_args.str().c_str()))) {
-        throw alvr::AvException("filter_in creation failed:", err);
-    }
-
-    if ((err = avfilter_graph_create_filter(
-             &filter_out, avfilter_get_by_name("buffersink"), "out", NULL, NULL, filter_graph
-         ))) {
-        throw alvr::AvException("filter_out creation failed:", err);
-    }
-
-    outputs->name = av_strdup("in");
-    outputs->filter_ctx = filter_in;
-    outputs->pad_idx = 0;
-    outputs->next = NULL;
-
-    inputs->name = av_strdup("out");
-    inputs->filter_ctx = filter_out;
-    inputs->pad_idx = 0;
-    inputs->next = NULL;
-
-    // std::string filters = "scale_vaapi=out_range=full:format=";
-    // if ((Settings::Instance().m_codec == ALVR_CODEC_HEVC
-    //      || Settings::Instance().m_codec == ALVR_CODEC_AV1)
-    //     && Settings::Instance().m_use10bitEncoder) {
-    //     filters += "p010";
-    // } else {
-    //     filters += "nv12";
-    // }
-    // if ((err = avfilter_graph_parse_ptr(filter_graph, filters.c_str(), &inputs, &outputs, NULL))
-    //     < 0) {
-    //     throw alvr::AvException("avfilter_graph_parse_ptr failed:", err);
-    // }
-
-    avfilter_inout_free(&outputs);
-    avfilter_inout_free(&inputs);
-
-    for (unsigned i = 0; i < filter_graph->nb_filters; ++i) {
-        filter_graph->filters[i]->hw_device_ctx = av_buffer_ref(hw_ctx);
-    }
-
-    if ((err = avfilter_graph_config(filter_graph, NULL))) {
-        throw alvr::AvException("avfilter_graph_config failed:", err);
-    }
 }
 
 alvr::EncodePipelineVulkan::~EncodePipelineVulkan() {
@@ -308,24 +229,16 @@ void alvr::EncodePipelineVulkan::PushFrame(uint64_t targetTimestampNs, bool idr)
                         std::chrono::steady_clock::now().time_since_epoch()
     )
                         .count();
-    int err = av_buffersrc_add_frame_flags(
-        filter_in, encoder_frame, AV_BUFFERSRC_FLAG_PUSH | AV_BUFFERSRC_FLAG_KEEP_REF
-    );
-    if (err != 0) {
-        throw alvr::AvException("av_buffersrc_add_frame failed", err);
-    }
-    err = av_buffersink_get_frame(filter_out, encoder_frame);
-    if (err != 0) {
-        throw alvr::AvException("av_buffersink_get_frame failed", err);
-    }
+    int err = 0;
 
-    encoder_frame->pict_type = idr ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_NONE;
-    encoder_frame->pts = targetTimestampNs;
+    vk_frame->pict_type = idr ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_NONE;
+    vk_frame->pts = targetTimestampNs;
 
-    if ((err = avcodec_send_frame(encoder_ctx, encoder_frame)) < 0) {
+    // ffmpeg: must call avcodec_send_frame
+    if ((err = avcodec_send_frame(encoder_ctx, vk_frame.get())) < 0) {
         throw alvr::AvException("avcodec_send_frame failed: ", err);
     }
-    av_frame_unref(encoder_frame);
+    // av_frame_unref(vk_frame.get());
 }
 
 void alvr::EncodePipelineVulkan::SetParams(FfiDynamicEncoderParams params) {

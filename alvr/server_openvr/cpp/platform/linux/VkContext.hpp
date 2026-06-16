@@ -169,6 +169,7 @@ public:
             VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME,
             VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME,
             VK_KHR_VIDEO_ENCODE_AV1_EXTENSION_NAME,
+            VK_KHR_VIDEO_MAINTENANCE_1_EXTENSION_NAME,
         };
 
         auto availExts = physDev.enumerateDeviceExtensionProperties();

@@ -195,15 +195,13 @@ void alvr::EncodePipelineNvEnc::PushFrame(uint64_t targetTimestampNs, bool idr) 
     AVVkFrame* vkf = reinterpret_cast<AVVkFrame*>(vk_frame->data[0]);
     vkf->sem_value[0]++;
 
-    VkTimelineSemaphoreSubmitInfo timelineInfo = {};
-    timelineInfo.sType = VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO;
+    vk::TimelineSemaphoreSubmitInfo timelineInfo = {};
     timelineInfo.signalSemaphoreValueCount = 1;
     timelineInfo.pSignalSemaphoreValues = &vkf->sem_value[0];
 
     vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eBottomOfPipe;
 
     vk::SubmitInfo submitInfo = {};
-    // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.pNext = &timelineInfo;
     // submitInfo.waitSemaphoreCount = 1;
     // submitInfo.pWaitSemaphores = &r->GetOutput().semaphore;

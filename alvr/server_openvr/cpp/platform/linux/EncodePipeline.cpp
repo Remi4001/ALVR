@@ -37,7 +37,7 @@ std::unique_ptr<alvr::EncodePipeline> alvr::EncodePipeline::Create(
         alvr::HWContext hwCtx(vk_ctx);
         try {
             auto vulkan = std::make_unique<alvr::EncodePipelineVulkan>(
-                hwCtx, devicePath, vk_ctx.meta.vendor, input_frame, width, height
+                hwCtx, vk_ctx.meta.vendor, input_frame, width, height
             );
             Info("Using Vulkan encoder");
             return vulkan;

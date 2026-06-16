@@ -23,10 +23,9 @@ class EncodePipelineVulkan : public EncodePipeline {
 public:
     ~EncodePipelineVulkan();
     EncodePipelineVulkan(
-        HWContext& vk_ctx,
-        std::string devicePath,
+        alvr::HWContext& vk_ctx,
         alvr::Vendor vendor,
-        VkFrame& input_frame,
+        alvr::VkFrame& input_frame,
         uint32_t width,
         uint32_t height
     );
@@ -38,21 +37,7 @@ public:
 
 private:
     AVBufferRef* hw_ctx = nullptr;
-    AVFrame* encoder_frame = nullptr;
-    AVFilterGraph* filter_graph = nullptr;
-    AVFilterContext* filter_in = nullptr;
-    AVFilterContext* filter_out = nullptr;
-
-    union vlVaQualityBits {
-        unsigned int quality;
-        struct {
-            unsigned int valid_setting : 1;
-            unsigned int preset_mode : 2;
-            unsigned int pre_encode_mode : 1;
-            unsigned int vbaq_mode : 1;
-            unsigned int reservered : 27;
-        };
-    };
+    std::unique_ptr<alvr::VkFrameCtx> vk_frame_ctx;
+    std::unique_ptr<AVFrame, std::function<void(AVFrame*)>> vk_frame;
 };
-;
 }
