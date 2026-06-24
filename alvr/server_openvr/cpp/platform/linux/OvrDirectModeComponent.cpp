@@ -11,6 +11,7 @@
 #include "OvrDirectModeComponent.h"
 
 #include "alvr_server/Logger.h"
+#include <vector>
 
 OvrDirectModeComponent::OvrDirectModeComponent(std::shared_ptr<PoseHistory> poseHistory)
     : m_poseHistory(poseHistory)
@@ -61,19 +62,17 @@ void OvrDirectModeComponent::CreateSwapTextureSet(
 
         if (!success) {
             Error("VRCIPCResourceManager: Failed to create shared texture\n");
-            for (int j = 0; j < i; j++) {
-                vr::VRIPCResourceManager()->UnrefResource(processResource->sharedHandles[j]);
-                m_handleMap.erase(processResource->sharedHandles[j]);
-            }
-            delete processResource;
-            break;
+            CleanupProcessResource(processResource);
+            return;
         }
 
         int fd = 0;
         auto ret = vr::VRIPCResourceManager()->ReceiveSharedFd(ipcHandle, &fd);
         if (ret == false) {
             Error("Failed to get fd for texture\n");
-            break;
+            vr::VRIPCResourceManager()->UnrefResource(myHandle);
+            CleanupProcessResource(processResource);
+            return;
         }
 
         processResource->fds[i] = fd;
@@ -96,15 +95,7 @@ void OvrDirectModeComponent::DestroySwapTextureSet(vr::SharedTextureHandle_t sha
     auto id = m_handleMap.find(sharedTextureHandle);
     if (id != m_handleMap.end()) {
         ProcessResource* p = id->second.first;
-
-        vr::VRIPCResourceManager()->UnrefResource(p->sharedHandles[0]);
-        vr::VRIPCResourceManager()->UnrefResource(p->sharedHandles[1]);
-        vr::VRIPCResourceManager()->UnrefResource(p->sharedHandles[2]);
-
-        m_handleMap.erase(p->sharedHandles[0]);
-        m_handleMap.erase(p->sharedHandles[1]);
-        m_handleMap.erase(p->sharedHandles[2]);
-        delete p;
+        CleanupProcessResource(p);
     } else {
         Debug("Requested to destroy not managing texture. handle:%p\n", sharedTextureHandle);
     }
@@ -116,21 +107,32 @@ void OvrDirectModeComponent::DestroyAllSwapTextureSets(uint32_t unPid) {
     Info("DestroyAllSwapTextureSets pid=%d\n", unPid);
 
     m_presentMutex.lock();
-    for (auto it = m_handleMap.begin(); it != m_handleMap.end();) {
-        if (it->second.first->pid == unPid) {
-            if (it->second.second == 0) {
-                ProcessResource* p = it->second.first;
-                vr::VRIPCResourceManager()->UnrefResource(p->sharedHandles[0]);
-                vr::VRIPCResourceManager()->UnrefResource(p->sharedHandles[1]);
-                vr::VRIPCResourceManager()->UnrefResource(p->sharedHandles[2]);
-                delete p;
-            }
-            m_handleMap.erase(it++);
-        } else {
-            ++it;
+    std::vector<ProcessResource*> resourcesToDestroy;
+    for (auto it = m_handleMap.begin(); it != m_handleMap.end(); ++it) {
+        if (it->second.first->pid == unPid && it->second.second == 0) {
+            resourcesToDestroy.push_back(it->second.first);
         }
     }
+    for (auto* p : resourcesToDestroy) {
+        CleanupProcessResource(p);
+    }
     m_presentMutex.unlock();
+}
+
+void OvrDirectModeComponent::CleanupProcessResource(ProcessResource* processResource) {
+    for (int i = 0; i < 3; i++) {
+        if (processResource->sharedHandles[i]) {
+            vr::VRIPCResourceManager()->UnrefResource(processResource->sharedHandles[i]);
+            m_handleMap.erase(processResource->sharedHandles[i]);
+            processResource->sharedHandles[i] = 0;
+        }
+        if (processResource->fds[i] >= 0) {
+            close(processResource->fds[i]);
+            processResource->fds[i] = -1;
+        }
+    }
+    m_swapchainIndices.erase(processResource);
+    delete processResource;
 }
 
 /** After Present returns, calls this to get the next index to use for rendering. */

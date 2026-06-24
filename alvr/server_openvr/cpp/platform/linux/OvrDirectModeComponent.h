@@ -61,6 +61,7 @@ private:
         uint32_t pid;
     };
     std::map<vr::SharedTextureHandle_t, std::pair<ProcessResource*, int>> m_handleMap;
+    void CleanupProcessResource(ProcessResource* processResource);
 
     static const int MAX_LAYERS = 10;
     int m_submitLayer;
