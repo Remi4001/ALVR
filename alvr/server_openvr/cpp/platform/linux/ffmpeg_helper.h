@@ -94,7 +94,7 @@ public:
 
 class VkFrameCtx {
 public:
-    VkFrameCtx(VkContext& vkContext, vk::ImageCreateInfo image_create_info);
+    VkFrameCtx(HWContext& hw_ctx, vk::ImageCreateInfo image_create_info);
     ~VkFrameCtx();
 
     AVBufferRef* ctx;

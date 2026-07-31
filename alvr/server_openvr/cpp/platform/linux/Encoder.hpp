@@ -232,7 +232,7 @@ public:
 
         // TODO: Fix Nvidia
 
-        auto frameCtx = new alvr::VkFrameCtx(vkCtx, *(vk::ImageCreateInfo*)&out.imageCI);
+        auto frameCtx = new alvr::VkFrameCtx(avHwCtx, *(vk::ImageCreateInfo*)&out.imageCI);
 
         auto frame = new alvr::VkFrame(
             vkCtx, out.image.image, out.imageCI, out.size, out.image.memory, out.drm
