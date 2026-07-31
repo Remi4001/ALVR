@@ -14,6 +14,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavfilter/avfilter.h>
 #include <libavutil/avutil.h>
+#include <libavutil/pixdesc.h>
 }
 
 namespace {
@@ -23,6 +24,11 @@ namespace {
 // We just want it to make the drm image 1:1
 AVPixelFormat vk_format_to_av_format(vk::Format vk_fmt) {
     for (int f = AV_PIX_FMT_NONE; f < AV_PIX_FMT_NB; ++f) {
+        // Keep only RGB/BGR formats
+        auto desc = av_pix_fmt_desc_get(AVPixelFormat(f));
+        if (!desc || !(desc->flags & AV_PIX_FMT_FLAG_RGB) || desc->nb_components < 3)
+            continue;
+
         auto current_fmt = av_vkfmt_from_pixfmt(AVPixelFormat(f));
         if (current_fmt and *current_fmt == (VkFormat)vk_fmt)
             return AVPixelFormat(f);
