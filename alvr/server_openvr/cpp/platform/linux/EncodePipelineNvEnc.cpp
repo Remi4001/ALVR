@@ -4,7 +4,10 @@
 #include "ffmpeg_helper.h"
 #include <ALVR-common/packet_types.h>
 #include <chrono>
+#include <libavutil/pixfmt.h>
 #include <memory>
+#include <stdexcept>
+#include <string>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -25,7 +28,30 @@ const char* encoder(ALVR_CODEC codec) {
     throw std::runtime_error("invalid codec " + std::to_string(codec));
 }
 
-void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
+/**
+ * We will recieve a frame from HW as AV_PIX_FMT_VULKAN which will converted to AV_PIX_FMT_BGRA
+ * as SW format when we get it from HW.
+ * But NVEnc support only BGR0 format and we easy can just to force it
+ * Because:
+ * AV_PIX_FMT_BGRA - 28  ///< packed BGRA 8:8:8:8, 32bpp, BGRABGRA...
+ * AV_PIX_FMT_BGR0 - 123 ///< packed BGR 8:8:8,    32bpp, BGRXBGRX...   X=unused/undefined
+ *
+ * We just to ignore the alpha channel and it's done
+ */
+AVPixelFormat drop_alpha(AVPixelFormat fmt) {
+    switch (fmt) {
+    case AV_PIX_FMT_BGRA:
+        return AV_PIX_FMT_BGR0;
+    case AV_PIX_FMT_RGBA:
+        return AV_PIX_FMT_RGB0;
+    default:
+        throw std::runtime_error(
+            "unsupported source pixel format:" + std::to_string(fmt)
+        );
+    }
+}
+
+void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx, AVPixelFormat sw_format) {
     AVBufferRef* hw_frames_ref;
     AVHWFramesContext* frames_ctx = NULL;
     int err = 0;
@@ -35,17 +61,7 @@ void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
     }
     frames_ctx = (AVHWFramesContext*)(hw_frames_ref->data);
     frames_ctx->format = AV_PIX_FMT_CUDA;
-    /**
-     * We will recieve a frame from HW as AV_PIX_FMT_VULKAN which will converted to AV_PIX_FMT_BGRA
-     * as SW format when we get it from HW.
-     * But NVEnc support only BGR0 format and we easy can just to force it
-     * Because:
-     * AV_PIX_FMT_BGRA - 28  ///< packed BGRA 8:8:8:8, 32bpp, BGRABGRA...
-     * AV_PIX_FMT_BGR0 - 123 ///< packed BGR 8:8:8,    32bpp, BGRXBGRX...   X=unused/undefined
-     *
-     * We just to ignore the alpha channel and it's done
-     */
-    frames_ctx->sw_format = AV_PIX_FMT_BGR0;
+    frames_ctx->sw_format = sw_format;
     frames_ctx->width = ctx->width;
     frames_ctx->height = ctx->height;
     if ((err = av_hwframe_ctx_init(hw_frames_ref)) < 0) {
@@ -70,7 +86,7 @@ alvr::EncodePipelineNvEnc::EncodePipelineNvEnc(
 )
     : v_ctx(v_ctx) {
     auto input_frame_ctx = (AVHWFramesContext*)vk_frame_ctx.ctx->data;
-    assert(input_frame_ctx->sw_format == AV_PIX_FMT_BGRA);
+    AVPixelFormat encoder_sw_format = drop_alpha(input_frame_ctx->sw_format);
 
     int err;
     vk_frame = input_frame.make_av_frame(vk_frame_ctx);
@@ -173,7 +189,7 @@ alvr::EncodePipelineNvEnc::EncodePipelineNvEnc(
     params.framerate = 60.0;
     SetParams(params);
 
-    set_hwframe_ctx(encoder_ctx, hw_ctx);
+    set_hwframe_ctx(encoder_ctx, hw_ctx, encoder_sw_format);
 
     err = avcodec_open2(encoder_ctx, codec, NULL);
     if (err < 0) {
