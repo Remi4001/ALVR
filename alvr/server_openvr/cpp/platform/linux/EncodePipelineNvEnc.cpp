@@ -61,7 +61,6 @@ void set_hwframe_ctx(AVCodecContext* ctx, AVBufferRef* hw_device_ctx) {
 
 } // namespace
 alvr::EncodePipelineNvEnc::EncodePipelineNvEnc(
-    Renderer* render,
     HWContext& vk_ctx,
     VkContext& v_ctx,
     VkFrame& input_frame,

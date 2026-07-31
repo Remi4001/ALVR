@@ -42,7 +42,8 @@ public:
         alvr::VkContext& vk_ctx,
         std::string devicePath,
         VkFrame& input_frame,
-        /* VkFrameCtx &vk_frame_ctx,  */ uint32_t width,
+        VkFrameCtx& vk_frame_ctx,
+        uint32_t width,
         uint32_t height
     );
 

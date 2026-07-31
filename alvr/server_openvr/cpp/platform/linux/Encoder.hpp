@@ -232,14 +232,15 @@ public:
 
         // TODO: Fix Nvidia
 
-        // auto framCtx = new alvr::VkFrameCtx(aCtx, *(vk::ImageCreateInfo*)&out.imageCI);
+        auto frameCtx = new alvr::VkFrameCtx(vkCtx, *(vk::ImageCreateInfo*)&out.imageCI);
 
         auto frame = new alvr::VkFrame(
             vkCtx, out.image.image, out.imageCI, out.size, out.image.memory, out.drm
         );
 
-        encoder
-            = EncodePipeline::Create(vkCtx, devicePath, *frame, outExtent.width, outExtent.height);
+        encoder = EncodePipeline::Create(
+            vkCtx, devicePath, *frame, *frameCtx, outExtent.width, outExtent.height
+        );
 
         idrScheduler.OnStreamStart();
     }
