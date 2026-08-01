@@ -222,7 +222,7 @@ public:
         }
         Info("Using device path %s", devicePath.c_str());
 
-        // av_log_set_level(AV_LOG_DEBUG);
+        av_log_set_level(AV_LOG_DEBUG);
 
         // TODO: Fix this memory leakage
 
