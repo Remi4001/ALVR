@@ -211,7 +211,7 @@ void Hmd::OnPoseUpdated(uint64_t targetTimestampNs, FfiDeviceMotion motion) {
     
     //TODO: Somehow missing in spite of our OPENVR headers being up to date.
     //NOT BEING ENABLED MIGHT CAUSE ISSUES.
-    //vr::VRProperties()->SetBoolProperty( this->prop_container, vr::Prop_Hmd_AllowsClientToControlTextureIndex, true );
+    vr::VRProperties()->SetBoolProperty( this->prop_container, vr::Prop_Hmd_AllowsClientToControlTextureIndex, true );
 
 #endif
 }
