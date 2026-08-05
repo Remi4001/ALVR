@@ -266,4 +266,8 @@ void OvrDirectModeComponent::Present(vr::SharedTextureHandle_t syncTexture) {
     enc.present(leftIdx.value(), rightIdx.value(), m_targetTimestampNs);
 }
 
-void OvrDirectModeComponent::PostPresent(const Throttling_t* pThrottling) { /* WaitForVSync(); */ }
+void OvrDirectModeComponent::PostPresent(const Throttling_t* pThrottling) {  
+    vr::VRServerDriverHost()->VsyncEvent(0.0);
+    //Calls VsyncEnvent somewhere
+    //WaitForVSync();
+  }

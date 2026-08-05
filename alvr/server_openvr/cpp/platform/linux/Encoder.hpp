@@ -245,6 +245,10 @@ public:
     }
 
     void present(u32 leftIdx, u32 rightIdx, u64 targetTimestampNs) {
+        if (!encoder) {
+            Error("Encoder not initialized, skipping frame, and erroring.\n");
+            return; // encoder init failed (e.g. VAAPI bad args), avoid crash
+        }
         ReportPresent(targetTimestampNs, 0);
         renderer.get().render(vkCtx, leftIdx, rightIdx);
         ReportComposed(targetTimestampNs, 0);

@@ -277,13 +277,6 @@ alvr::EncodePipelineVAAPI::EncodePipelineVAAPI(
 
     av_opt_set_int(encoder_ctx->priv_data, "async_depth", 1, 0);
 
-    set_hwframe_ctx(encoder_ctx, hw_ctx);
-
-    err = avcodec_open2(encoder_ctx, codec, NULL);
-    if (err < 0) {
-        throw alvr::AvException("Cannot open video encoder codec:", err);
-    }
-
     AVBufferRef* hw_frames_ref;
     if (!(hw_frames_ref = av_hwframe_ctx_alloc(hw_ctx))) {
         throw std::runtime_error("Failed to create VAAPI frame context.");
@@ -351,7 +344,7 @@ alvr::EncodePipelineVAAPI::EncodePipelineVAAPI(
     inputs->pad_idx = 0;
     inputs->next = NULL;
 
-    std::string filters = "scale_vaapi=out_range=full:format=";
+    std::string filters = "scale_vaapi=w=" + std::to_string(width) + ":h=" + std::to_string(height) + ":out_range=full:format=";
     if ((Settings_Instance()->m_codec == ALVR_CODEC_HEVC
          || Settings_Instance()->m_codec == ALVR_CODEC_AV1)
         && Settings_Instance()->m_use10bitEncoder) {
@@ -373,6 +366,18 @@ alvr::EncodePipelineVAAPI::EncodePipelineVAAPI(
 
     if ((err = avfilter_graph_config(filter_graph, NULL))) {
         throw alvr::AvException("avfilter_graph_config failed:", err);
+    }
+
+    AVBufferRef* out_hw_frames = av_buffersink_get_hw_frames_ctx(filter_out);
+    if (!out_hw_frames) {
+        throw std::runtime_error("Failed to get hw_frames_ctx from buffersink. scale_vaapi failed to output a hardware frame.");
+    }
+    
+    encoder_ctx->hw_frames_ctx = av_buffer_ref(out_hw_frames);
+
+    err = avcodec_open2(encoder_ctx, codec, NULL);
+    if (err < 0) {
+        throw alvr::AvException("Cannot open video encoder codec:", err);
     }
 }
 

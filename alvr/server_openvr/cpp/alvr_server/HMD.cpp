@@ -200,6 +200,19 @@ void Hmd::OnPoseUpdated(uint64_t targetTimestampNs, FfiDeviceMotion motion) {
             static_cast<float>(Settings_Instance()->m_refreshRate)
         );
     }
+    //TODO: make this linux only
+    //DEBUG: Linux Direct Mode driver needs this to be set to true, otherwise it will not work.
+    //This feels like a hacky solution, should be enalbed by default for drivers implementing DMC.
+    vr::VRProperties()->SetBoolProperty( this->prop_container, vr::Prop_DriverDirectModeSendsVsyncEvents_Bool, true );
+    //TODO: DO we truely need this? I think we do, but it is not clear. This is a hacky solution, but it works for now.
+    vr::VRProperties()->SetBoolProperty( this->prop_container, vr::Prop_Hmd_SupportsAppThrottling_Bool, true );
+    //TODO: Same as Prop_DriverDirectModeSendsVsyncEvents_Bool Property
+    vr::VRProperties()->SetBoolProperty( this->prop_container, vr::Prop_SupportsXrTextureSets_Bool, true );
+    
+    //TODO: Somehow missing in spite of our OPENVR headers being up to date.
+    //NOT BEING ENABLED MIGHT CAUSE ISSUES.
+    //vr::VRProperties()->SetBoolProperty( this->prop_container, vr::Prop_Hmd_AllowsClientToControlTextureIndex, true );
+
 #endif
 }
 
