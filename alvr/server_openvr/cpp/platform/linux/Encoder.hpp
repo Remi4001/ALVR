@@ -1,6 +1,8 @@
 #pragma once
 
 #include <fstream>
+#include <ios>
+#include <iostream>
 #include <memory>
 #include <type_traits>
 
@@ -152,6 +154,8 @@ public:
         }
 
         auto const& settings = Settings_Instance();
+        Info("createImages: m_enableFoveatedEncoding=%d", settings->m_enableFoveatedEncoding);
+        std::cout << "ALVR TEST: " << std::boolalpha << settings->m_enableFoveatedEncoding << std::endl;
 
         vk::Extent2D inExtent {
             .width = rendererCI.inputEyeExtent.width * 2,
@@ -167,7 +171,14 @@ public:
         if (settings->m_enableFoveatedEncoding) {
             auto [info, newExtent] = makeFoveation(*settings, rendererCI.outputExtent);
             rendererCI.outputExtent = newExtent;
-
+            Info(
+                "Foveation: input=%dx%d -> output=%dx%d (pipeCIs before push=%zu)",
+                rendererCI.outputExtent.width,
+                rendererCI.outputExtent.height,
+                newExtent.width,
+                newExtent.height,
+                pipeCIs.size()
+            );
             pipeCIs.push_back(info);
         }
 
