@@ -168,7 +168,7 @@ public:
             pipeCIs.push_back(makeColorCorrection(*settings, inExtent));
 
         // NOTE: This needs to be last as it needs to render into the output image
-        if (settings->m_enableFoveatedEncoding) {
+        if (settings->m_enableFoveatedEncoding || true) {
             auto [info, newExtent] = makeFoveation(*settings, rendererCI.outputExtent);
             rendererCI.outputExtent = newExtent;
             Info(
